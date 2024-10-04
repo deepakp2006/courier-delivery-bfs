@@ -7,19 +7,27 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
+            background-color: black;
+            color: white;
         }
         canvas {
-            border: 1px solid black;
+            border: 14px solid powderblue;
             margin-top: 20px;
+            background-image: url('http://static8.depositphotos.com/1072020/941/v/950/depositphotos_9417727-stock-illustration-vector-detailed-city-map.jpg');
+            background-size: cover;
         }
         #status {
             margin-top: 20px;
             font-weight: bold;
         }
         .highlight {
-            color: red;
+            color: green;
             font-weight: bold;
+        }
+        .location-label {
+            font-weight: bold;
+            font-size: 28px;
+            background-color: green;
         }
     </style>
 </head>
@@ -40,32 +48,26 @@
             let deliveredCount = 0;
             let allDelivered = true;
 
-            // Adjacency list for BFS
             let graph = { 'DeliveryOffice': [] };
             let visited = { 'DeliveryOffice': false };
 
-            // Delivery man image
             const deliveryManImage = new Image();
-            deliveryManImage.src = 'https://p1.hiclipart.com/preview/363/476/847/delivery-riding-toy-courier-food-delivery-cargo-scooter-logo-cartoon-transport-png-clipart.jpg'; // Path to your image
+            deliveryManImage.src = 'https://marketplace.canva.cn/iva5E/MAEv4Jiva5E/1/wm_tl-1/canva-delivery-truck-location-icon-MAEv4Jiva5E.png';
 
             deliveryManImage.onload = function() {
-                // Get the number of locations
                 const numLocations = parseInt(prompt('Enter the number of locations:'));
 
-                // Collect information for each location
                 for (let i = 0; i < numLocations; i++) {
                     const name = prompt(`Enter the name of location ${i + 1}:`);
                     const direction = parseInt(prompt(`Enter the direction in degrees for ${name}:`));
                     const distance = parseInt(prompt(`Enter the distance in kilometers for ${name}:`));
                     locations.push({ name, direction, distance });
 
-                    // Calculate coordinates for the location
                     const angle = direction * Math.PI / 180;
-                    const x = deliveryOffice.x + Math.cos(angle) * distance * 50; // Scaling distance
-                    const y = deliveryOffice.y - Math.sin(angle) * distance * 50; // Inverted y-axis
+                    const x = deliveryOffice.x + Math.cos(angle) * distance * 50;
+                    const y = deliveryOffice.y - Math.sin(angle) * distance * 50;
                     locationCoordinates.push({ name, x, y });
 
-                    // Update graph for BFS
                     graph[name] = [];
                     visited[name] = false;
 
@@ -85,22 +87,20 @@
             function drawLocations() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // Draw delivery office
                 ctx.beginPath();
                 ctx.arc(deliveryOffice.x, deliveryOffice.y, 5, 0, 2 * Math.PI);
-                ctx.fillStyle = 'red';
+                ctx.fillStyle = 'blue';
                 ctx.fill();
-                ctx.font = '16px Arial';
-                ctx.fillText('Delivery Office', deliveryOffice.x + 10, deliveryOffice.y - 10);
+                ctx.font = '30px fantacy';
+                ctx.fillText('DELIVERY OFFICE', deliveryOffice.x - 20, deliveryOffice.y - 20);
 
-                // Draw locations
                 for (const loc of locationCoordinates) {
                     ctx.beginPath();
                     ctx.arc(loc.x, loc.y, 5, 0, 2 * Math.PI);
-                    ctx.fillStyle = 'blue';
+                    ctx.fillStyle = 'red';
                     ctx.fill();
-                    ctx.font = '16px Arial';
-                    ctx.fillStyle = 'blue';
+                    ctx.font = '30px verdana';
+                    ctx.fillStyle = 'green';
                     ctx.fillText(loc.name, loc.x + 10, loc.y - 10);
                 }
             }
@@ -120,8 +120,7 @@
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
                         drawLocations();
 
-                        // Draw delivery man during movement
-                        ctx.drawImage(deliveryManImage, newX - 15, newY - 15, 30, 30); // Adjust size as needed
+                        ctx.drawImage(deliveryManImage, newX - 15, newY - 15, 90, 90);
 
                         requestAnimationFrame(animate);
                     } else {
@@ -144,17 +143,16 @@
                             visited[neighbor] = true;
                             queue.push(neighbor);
                         } else if (neighbor === 'DeliveryOffice') {
-                            return true; // Cycle detected
+                            return true;
                         }
                     }
                 }
-                return false; // No cycle
+                return false;
             }
 
             function moveDeliveryMan(index) {
                 if (index >= locationCoordinates.length) {
                     if (!allDelivered) {
-                        // If any delivery was not successful, return to the office
                         moveToLocation(locationCoordinates[locationCoordinates.length - 1], deliveryOffice, () => {
                             drawPaths();
                             const isCycle = bfsCycleCheck(graph);
@@ -167,8 +165,7 @@
                             }
                         });
                     } else {
-                        // All deliveries were successful, end of the route
-                        drawPaths(); // Draw paths for locations even if no cycle
+                        drawPaths();
                         alert('All couriers delivered. No cycle formed.');
                         document.getElementById('status').innerText = 'All couriers delivered. No cycle formed.';
                     }
@@ -177,16 +174,16 @@
 
                 const currentLocation = locationCoordinates[index];
                 moveToLocation(index === 0 ? deliveryOffice : locationCoordinates[index - 1], currentLocation, () => {
-                    // Draw the path to the current location
                     if (index > 0 || (index === 0 && !allDelivered)) {
                         ctx.beginPath();
                         ctx.moveTo(index === 0 ? deliveryOffice.x : locationCoordinates[index - 1].x, index === 0 ? deliveryOffice.y : locationCoordinates[index - 1].y);
                         ctx.lineTo(currentLocation.x, currentLocation.y);
-                        ctx.strokeStyle = 'green';
+                        ctx.strokeStyle = 'red';
+                        ctx.lineWidth = 8;
+                        ctx.setLineDash([5, 5]);
                         ctx.stroke();
                     }
 
-                    // Once the delivery man reaches the location, ask for delivery status
                     const status = prompt(`Delivery status at ${currentLocation.name} (yes/no):`);
                     if (status.toLowerCase() === 'no') {
                         undeliveredCount++;
@@ -195,36 +192,39 @@
                         deliveredCount++;
                     }
 
-                    // Move to the next location after a short delay
-                    setTimeout(() => moveDeliveryMan(index + 1), 1000); // Delay for demonstration
+                    setTimeout(() => moveDeliveryMan(index + 1), 2000);
                 });
             }
 
             function drawPaths() {
-                // Draw paths between locations after the cycle is formed or route completed
                 for (let i = 0; i < locationCoordinates.length - 1; i++) {
                     ctx.beginPath();
                     ctx.moveTo(locationCoordinates[i].x, locationCoordinates[i].y);
                     ctx.lineTo(locationCoordinates[i + 1].x, locationCoordinates[i + 1].y);
-                    ctx.strokeStyle = 'green';
+                    ctx.strokeStyle = 'red';
+                    ctx.lineWidth = 8;
+                    ctx.setLineDash([5, 5]);
                     ctx.stroke();
                 }
 
-                // Draw the path back to the office after cycle is formed
                 if (!allDelivered && locationCoordinates.length > 0) {
                     ctx.beginPath();
                     ctx.moveTo(locationCoordinates[locationCoordinates.length - 1].x, locationCoordinates[locationCoordinates.length - 1].y);
                     ctx.lineTo(deliveryOffice.x, deliveryOffice.y);
-                    ctx.strokeStyle = 'green';
+                    ctx.strokeStyle = 'red';
+                    ctx.lineWidth = 8;
+                    ctx.setLineDash([5, 5]);
                     ctx.stroke();
                 }
 
-                // Draw the initial path from the source to the first location if not already drawn
                 ctx.beginPath();
                 ctx.moveTo(deliveryOffice.x, deliveryOffice.y);
                 ctx.lineTo(locationCoordinates[0].x, locationCoordinates[0].y);
-                ctx.strokeStyle = 'green';
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 8;
+                ctx.setLineDash([5, 5]);
                 ctx.stroke();
+                ctx.setLineDash([]);
             }
         }
     </script>
